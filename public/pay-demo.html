@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zest Pay Button Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#bef264",
+            },
+            boxShadow: {
+              glow: "0 8px 24px rgba(190,242,100,0.16)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background: #010101;
+        color: #fff;
+        font-family: Inter, system-ui, sans-serif;
+      }
+    </style>
+  </head>
+  <body class="p-10">
+    <h1 class="text-2xl font-bold mb-4">Pay Button (Tailwind) — Demo</h1>
+
+    <!-- Example button using Tailwind utility classes to match site identity -->
+    <button
+      class="pay-btn tw-pay inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-primary text-black font-bold shadow-glow hover:bg-lime-400 active:scale-95 transition-transform"
+      data-amount="10.00"
+      data-method="options"
+    >
+      <span class="btn-text">Pay Now</span>
+      <div class="icon-container w-7 h-7 relative">
+        <!-- wallet icon (default) -->
+        <svg
+          viewBox="0 0 24 24"
+          class="icon wallet-icon default-icon absolute inset-0 w-7 h-7 text-black"
+        >
+          <path
+            d="M21,18V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5A2,2 0 0,1 5,3H19A2,2 0 0,1 21,5V6H12C10.89,6 10,6.9 10,8V16A2,2 0 0,0 12,18M12,16H22V8H12M16,13.5A1.5,1.5 0 0,1 14.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,12A1.5,1.5 0 0,1 16,13.5Z"
+            fill="currentColor"
+          ></path>
+        </svg>
+        <!-- card icon -->
+        <svg
+          viewBox="0 0 24 24"
+          class="icon card-icon absolute inset-0 w-7 h-7 text-black opacity-0"
+        >
+          <path
+            d="M20,8H4V6H20M20,18H4V12H20M20,4H4C2.89,4 2,4.89 2,6V18C2,19.11 2.89,20 4,20H20C21.11,20 22,19.11 22,18V6C22,4.89 21.11,4 20,4Z"
+            fill="currentColor"
+          ></path>
+        </svg>
+      </div>
+    </button>
+
+    <p class="mt-6 text-sm text-gray-300">
+      Use <code>data-amount</code> and
+      <code>data-method</code> (qr|apple_pay|google_pay|options)
+    </p>
+
+    <script src="/pay-button-bridge.js"></script>
+    <script>
+      // small enhancement: animate icons on hover like original
+      const btn = document.querySelector(".pay-btn");
+      if (btn) {
+        btn.addEventListener("mouseenter", () => {
+          const card = btn.querySelector(".card-icon");
+          if (card) {
+            card.style.opacity = "1";
+            card.style.transform = "translateY(0)";
+          }
+        });
+        btn.addEventListener("mouseleave", () => {
+          const card = btn.querySelector(".card-icon");
+          if (card) {
+            card.style.opacity = "0";
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
