@@ -177,7 +177,7 @@ export const Header: React.FC<HeaderProps> = ({
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div className="w-9 h-9 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700">
                                         <img
-                                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+                                            src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
                                             alt="avatar"
                                             className="w-full h-full object-cover"
                                         />

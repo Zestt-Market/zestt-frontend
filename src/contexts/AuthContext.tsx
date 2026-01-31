@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useUser, useAuth as useClerkAuth } from '@clerk/nextjs';
 import { User, Position, Trade, Market } from '../types';
+import { UserService } from '@/src/services/user.service';
 
 interface AuthContextType {
     user: User | null;
@@ -31,7 +32,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { signOut } = useClerkAuth();
     const [user, setUser] = useState<User | null>(null);
 
-    // Sincronizar usuário do Clerk com estado local
+    // Sincronizar usuário do Clerk com estado local E backend
     useEffect(() => {
         console.log('🔄 AuthContext - Clerk Status:', { isLoaded, clerkUser: !!clerkUser });
 
@@ -41,16 +42,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             console.log('✅ Clerk User Authenticated:', { name, email });
 
-            // Testar conexão com backend
-            fetch('http://localhost:3000/health')
-                .then(res => res.json())
-                .then(data => console.log('🔗 Backend Health:', data))
-                .catch(err => console.error('❌ Backend Error:', err));
+            // Sincronizar com backend
+            const syncUserWithBackend = async () => {
+                try {
+                    const backendUser = await UserService.syncUser({
+                        clerkUserId: clerkUser.id,
+                        email,
+                        displayName: name,
+                        avatarUrl: clerkUser.imageUrl,
+                    });
+
+                    console.log('✅ User synced with backend:', backendUser);
+                } catch (err) {
+                    console.error('❌ Backend sync error:', err);
+                }
+            };
+
+            syncUserWithBackend();
 
             setUser({
                 id: clerkUser.id,
                 name,
                 email,
+                avatarUrl: clerkUser.imageUrl,
                 isAdmin: false,
                 balance: 3500.0,
                 portfolioValue: 1200.0,
@@ -58,11 +72,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 tradeHistory: [],
             });
         }
-        // COMENTADO: Não limpar usuário se Clerk não estiver autenticado (permite login mock)
-        // else if (isLoaded && !clerkUser) {
-        //     console.log('❌ No Clerk User - Clearing state');
-        //     setUser(null);
-        // }
     }, [clerkUser, isLoaded]);
 
     // Log quando user state mudar

@@ -51,6 +51,7 @@ export interface Trade {
 export interface User {
   id: string;
   email: string;
+  avatarUrl?: string;
   isAdmin: boolean;
   balance: number;
   portfolioValue: number;

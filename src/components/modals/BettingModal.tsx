@@ -61,7 +61,7 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
             />
 
             {/* Modal */}
-            <div className={`relative w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-enter ${theme === 'dark' ? 'bg-[#1c2127]' : 'bg-white'}`}>
+            <div className={`relative w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-enter ${theme === 'dark' ? 'bg-[#1c2127]' : 'bg-white'}`} style={{ maxHeight: '90vh' }}>
                 {/* Header */}
                 <div className="p-8 pb-6">
                     <button
@@ -153,12 +153,12 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
 
                 {/* Amount Input */}
                 <div className="px-8 pb-6">
-                    <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-zinc-50'}`}>
-                        <label className={`text-xs font-medium mb-2 block ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    <div className={`rounded-xl p-5 ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-zinc-50'}`}>
+                        <label className={`text-xs font-medium mb-3 block ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'}`}>
                             Reais
                         </label>
-                        <div className="flex items-center gap-2">
-                            <span className={`text-4xl font-bold ${theme === 'dark' ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                        <div className="flex items-center gap-3">
+                            <span className={`text-3xl font-bold ${theme === 'dark' ? 'text-zinc-600' : 'text-zinc-400'}`}>
                                 R$
                             </span>
                             <input
@@ -166,12 +166,13 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 placeholder="0"
-                                className={`flex-1 text-4xl font-bold bg-transparent outline-none ${theme === 'dark' ? 'text-white placeholder-zinc-700' : 'text-zinc-900 placeholder-zinc-300'}`}
+                                className={`flex-1 text-3xl font-bold bg-transparent outline-none ${theme === 'dark' ? 'text-white placeholder-zinc-700' : 'text-zinc-900 placeholder-zinc-300'}`}
                                 autoFocus
+                                style={{ minWidth: 0 }}
                             />
                         </div>
                         {numAmount > 0 && (
-                            <p className="text-xs font-medium text-primary mt-2">
+                            <p className="text-xs font-medium text-primary mt-3">
                                 Ganho potencial: R$ {profit.toFixed(0)} ({((profit / numAmount) * 100).toFixed(1)}%)
                             </p>
                         )}
@@ -183,14 +184,14 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
                     <button
                         onClick={handleBuy}
                         disabled={numAmount <= 0}
-                        className={`w-full py-4 rounded-xl text-base font-black uppercase tracking-wider transition-all transform active:scale-95 ${numAmount > 0
+                        className={`w-full py-4 rounded-xl text-sm font-black uppercase tracking-wide transition-all transform active:scale-95 ${numAmount > 0
                             ? 'bg-primary hover:bg-lime-400 text-black shadow-lg shadow-primary/20 hover:shadow-primary/40'
                             : theme === 'dark'
                                 ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
                                 : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
                             }`}
                     >
-                        Confirmar Aposta ({side === 'BUY' ? 'Comprar' : 'Vender'})
+                        Confirmar {side === 'BUY' ? 'Compra' : 'Venda'}
                     </button>
                 </div>
             </div>
