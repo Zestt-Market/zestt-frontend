@@ -1,111 +1,205 @@
 "use client";
 
-import React, { useState } from "react";
-import QRCode from "qrcode";
 import { X } from "lucide-react";
-import { PaymentOptionsModal } from "./PaymentOptionsModal";
+import React, { useEffect, useState } from "react";
+import { usePayments } from "../../contexts/PaymentsContext";
+import { CreditCardForm } from "./deposit/CreditCardForm";
+import { DepositForm } from "./deposit/DepositForm";
+import { PixQRCodeStep } from "./deposit/PixQRCodeStep";
+import { SuccessAnimation } from "./deposit/SuccessAnimation";
 
 interface DepositModalProps {
   onClose: () => void;
-  onDeposit: (payload: { amount: number; date: string; id: string }) => void;
+  onSuccess?: () => void;
   theme?: "dark" | "light";
 }
 
+type FlowStep = "form" | "pix-qrcode" | "card-form" | "success";
+
 export const DepositModal: React.FC<DepositModalProps> = ({
   onClose,
-  onDeposit,
+  onSuccess,
   theme = "dark",
 }) => {
-  const [amount, setAmount] = useState<number>(100);
-  const [qr, setQr] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [optionsVisible, setOptionsVisible] = useState(false);
+  const [amount, setAmount] = useState<string>("100");
+  const [currency, setCurrency] = useState<"BRL" | "USD">("BRL");
+  const [paymentMethod, setPaymentMethod] = useState<"PIX" | "CREDIT_CARD">("PIX");
+  const { createDeposit, loading, error } = usePayments();
+  const [step, setStep] = useState<FlowStep>("form");
+  const [pixQRCode, setPixQRCode] = useState<string>("");
+  const [countdown, setCountdown] = useState<number>(120);
 
-  const generateQr = async () => {
-    setGenerating(true);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCVV, setCardCVV] = useState("");
+
+  // Countdown timer
+  useEffect(() => {
+    if (step === "pix-qrcode" && countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [step, countdown]);
+
+  // Detectar quando countdown chegar a 0 e processar pagamento
+  useEffect(() => {
+    if (step === "pix-qrcode" && countdown === 0) {
+      handlePixPaymentComplete();
+    }
+  }, [countdown, step]);
+
+  const handlePixPaymentComplete = async () => {
     try {
-      const payload = {
-        id: `dep-${Date.now()}`,
-        amount,
-        date: new Date().toLocaleString("pt-BR"),
-      };
-      const txt = JSON.stringify(payload);
-      const d = await (QRCode as any).toDataURL(txt, {
-        errorCorrectionLevel: "H",
-        margin: 1,
-      });
-      setQr(d);
+      const amountValue = parseFloat(amount);
+      const amountCents = Math.round(amountValue * 100);
+      await createDeposit(amountCents, currency, paymentMethod);
+      setStep("success");
     } catch (err) {
-      console.error(err);
-      setQr(null);
-    } finally {
-      setGenerating(false);
+      console.error("Erro ao confirmar pagamento PIX:", err);
     }
   };
 
-  const confirmDeposit = () => {
-    const id = `dep-${Date.now()}`;
-    const date = new Date().toLocaleString("pt-BR");
-    onDeposit({ amount, date, id });
+  const handleFormSubmit = async () => {
+    const amountValue = parseFloat(amount);
+
+    if (!amountValue || amountValue <= 0) {
+      alert("Digite um valor válido!");
+      return;
+    }
+
+    if (paymentMethod === "PIX") {
+      // Generate mock QR Code
+      const qrData = `00020126360014br.gov.bcb.pix0114+5511999999999520400005303986540${amountValue.toFixed(
+        2
+      )}5802BR5913Zest Platform6009Sao Paulo62070503***6304`;
+      setPixQRCode(qrData);
+      setCountdown(120);
+      setStep("pix-qrcode");
+    } else {
+      setStep("card-form");
+    }
+  };
+
+  const handleCardSubmit = async () => {
+    if (!cardNumber || !cardName || !cardExpiry || !cardCVV) {
+      alert("Preencha todos os campos do cartão!");
+      return;
+    }
+
+    try {
+      const amountValue = parseFloat(amount);
+      const amountCents = Math.round(amountValue * 100);
+      await createDeposit(amountCents, currency, paymentMethod);
+      setStep("success");
+    } catch (err) {
+      console.error("Erro ao criar depósito:", err);
+    }
+  };
+
+  const handleSuccess = () => {
+    onSuccess?.();
     onClose();
   };
 
-  const handlePayMethod = (method: string, payload?: any) => {
-    // For prototype we just confirm deposit when any method is chosen
-    if (method === "apple_pay" || method === "google_pay" || method === "pix") {
-      confirmDeposit();
+  const getTitle = () => {
+    switch (step) {
+      case "form":
+        return "Depositar";
+      case "pix-qrcode":
+        return "Pagar com PIX";
+      case "card-form":
+        return "Dados do Cartão";
+      case "success":
+        return "Sucesso!";
     }
   };
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div
-        className={`relative w-full max-w-md rounded-2xl p-6 ${
-          theme === "dark" ? "bg-zinc-900" : "bg-white"
-        }`}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={step === "success" ? undefined : onClose}
+      />
+      <div
+        className={`relative w-full max-w-md rounded-3xl shadow-2xl overflow-hidden ${theme === "dark" ? "bg-[#1c2127]" : "bg-white"
+          }`}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full text-zinc-400 hover:bg-white/5"
-        >
-          <X size={18} />
-        </button>
-        <h3 className="text-xl font-bold mb-4">Depositar</h3>
-        <label className="text-sm text-zinc-400">Valor (BRL)</label>
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-2xl font-bold">R$</span>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
-            className="flex-1 bg-transparent outline-none text-2xl font-bold"
-          />
-        </div>
-
-        <div className="mt-4 flex gap-2">
+        {step !== "success" && (
           <button
-            onClick={() => setOptionsVisible(true)}
-            className="px-4 py-2 bg-primary text-black rounded font-bold"
+            onClick={onClose}
+            className={`absolute top-6 right-6 p-2 rounded-full transition-colors z-10 ${theme === "dark"
+              ? "hover:bg-white/10 text-zinc-400"
+              : "hover:bg-zinc-100 text-zinc-600"
+              }`}
           >
-            Opções de pagamento
+            <X size={24} />
           </button>
-          <button
-            onClick={confirmDeposit}
-            className="px-4 py-2 bg-green-600 text-white rounded font-bold"
-          >
-            Confirmar depósito
-          </button>
-        </div>
-
-        {optionsVisible && (
-          <PaymentOptionsModal
-            amount={amount}
-            onClose={() => setOptionsVisible(false)}
-            onPay={handlePayMethod}
-            theme={theme}
-          />
         )}
+
+        <div className="p-8">
+          <h3
+            className={`text-3xl font-black uppercase tracking-tight mb-6 ${theme === "dark" ? "text-white" : "text-zinc-900"
+              }`}
+          >
+            {getTitle()}
+          </h3>
+
+          {step === "form" && (
+            <DepositForm
+              amount={amount}
+              setAmount={setAmount}
+              currency={currency}
+              setCurrency={setCurrency}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              loading={loading}
+              error={error}
+              onSubmit={handleFormSubmit}
+              theme={theme}
+            />
+          )}
+
+          {step === "pix-qrcode" && (
+            <PixQRCodeStep
+              qrCode={pixQRCode}
+              amount={parseFloat(amount)}
+              currency={currency}
+              countdown={countdown}
+              onCountdownEnd={() => setStep("success")}
+              theme={theme}
+            />
+          )}
+
+          {step === "card-form" && (
+            <CreditCardForm
+              cardNumber={cardNumber}
+              setCardNumber={setCardNumber}
+              cardName={cardName}
+              setCardName={setCardName}
+              cardExpiry={cardExpiry}
+              setCardExpiry={setCardExpiry}
+              cardCVV={cardCVV}
+              setCardCVV={setCardCVV}
+              amount={parseFloat(amount)}
+              currency={currency}
+              loading={loading}
+              onSubmit={handleCardSubmit}
+              theme={theme}
+            />
+          )}
+
+          {step === "success" && (
+            <SuccessAnimation
+              amount={parseFloat(amount)}
+              currency={currency}
+              onComplete={handleSuccess}
+              theme={theme}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

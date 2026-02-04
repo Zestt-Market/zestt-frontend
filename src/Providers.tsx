@@ -1,14 +1,16 @@
 "use client";
 
 import { ThemeProvider } from './design-system';
-import { AuthProvider, MarketProvider } from './contexts';
+import { AuthProvider, MarketProvider, PaymentsProvider } from './contexts';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <ThemeProvider defaultTheme="dark" storageKey="zestt-theme">
             <AuthProvider>
                 <MarketProvider>
-                    {children}
+                    <PaymentsProvider>
+                        {children}
+                    </PaymentsProvider>
                 </MarketProvider>
             </AuthProvider>
         </ThemeProvider>

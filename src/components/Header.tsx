@@ -14,10 +14,12 @@ import { ZestLogo } from './ZestLogo';
 import { useAuth } from '../contexts';
 import { useTheme } from '../design-system';
 import { ViewState } from '../types';
+import { usePayments } from '../contexts/PaymentsContext';
 
 interface HeaderProps {
     onViewChange: (view: ViewState) => void;
     onDepositClick: () => void;
+    onWithdrawClick?: () => void;
 }
 
 const formatCurrency = (val: number) => {
@@ -33,6 +35,24 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
     const { user, login, logout } = useAuth();
     const { theme, setTheme } = useTheme();
+    const { balance, getBalance } = usePayments();
+    const [displayBalance, setDisplayBalance] = React.useState({ portfolio: 0, cash: 0 });
+
+    React.useEffect(() => {
+        if (user) {
+            getBalance('BRL');
+        }
+    }, [user]);
+
+    React.useEffect(() => {
+        console.log('💰 Balance atualizado:', balance);
+        if (balance) {
+            setDisplayBalance({
+                portfolio: balance.balanceCents / 100,
+                cash: balance.availableCents / 100
+            });
+        }
+    }, [balance]);
 
     const handleThemeToggle = () => {
         setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -142,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
                                         Portfolio
                                     </p>
                                     <p className="font-mono font-bold text-sm text-primary">
-                                        {formatCurrency(user.portfolioValue)}
+                                        {formatCurrency(displayBalance.portfolio)}
                                     </p>
                                 </button>
                                 <div className="text-right">
@@ -150,7 +170,7 @@ export const Header: React.FC<HeaderProps> = ({
                                         Cash
                                     </p>
                                     <p className="font-mono font-bold text-sm text-primary">
-                                        {formatCurrency(user.balance)}
+                                        {formatCurrency(displayBalance.cash)}
                                     </p>
                                 </div>
                                 <button

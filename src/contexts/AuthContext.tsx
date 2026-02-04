@@ -29,30 +29,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user: clerkUser, isLoaded } = useUser();
-    const { signOut } = useClerkAuth();
+    const { signOut, getToken } = useClerkAuth();
     const [user, setUser] = useState<User | null>(null);
 
-    // Sincronizar usuário do Clerk com estado local E backend
     useEffect(() => {
-        console.log('🔄 AuthContext - Clerk Status:', { isLoaded, clerkUser: !!clerkUser });
-
         if (isLoaded && clerkUser) {
             const email = clerkUser.primaryEmailAddress?.emailAddress || '';
             const name = clerkUser.fullName || clerkUser.firstName || email.split('@')[0];
 
-            console.log('✅ Clerk User Authenticated:', { name, email });
-
-            // Sincronizar com backend
             const syncUserWithBackend = async () => {
                 try {
-                    const backendUser = await UserService.syncUser({
+                    const token = await getToken();
+                    await UserService.syncUser({
                         clerkUserId: clerkUser.id,
                         email,
                         displayName: name,
                         avatarUrl: clerkUser.imageUrl,
-                    });
+                    }, token || undefined);
 
-                    console.log('✅ User synced with backend:', backendUser);
                 } catch (err) {
                     console.error('❌ Backend sync error:', err);
                 }
@@ -71,17 +65,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 positions: [],
                 tradeHistory: [],
             });
+        } else if (isLoaded && !clerkUser) {
+            // Limpar user se Clerk confirmar que não está autenticado
+            setUser(null);
         }
-    }, [clerkUser, isLoaded]);
+    }, [clerkUser, isLoaded, getToken]);
 
     // Log quando user state mudar
     useEffect(() => {
-        console.log('👤 User State Changed:', user ? `${user.name} (${user.email})` : 'null');
     }, [user]);
 
     const login = (email: string) => {
-        console.log('🔐 Demo Login:', email);
-        // Para demo: criar usuário mock
         setUser({
             id: 'demo-user',
             name: email.split('@')[0],
@@ -102,7 +96,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(null);
     };
 
-    // ========== BUSINESS LOGIC ==========
 
     const handleDeposit = (payload: { amount: number; date: string; id: string }) => {
         setUser((prev) => {

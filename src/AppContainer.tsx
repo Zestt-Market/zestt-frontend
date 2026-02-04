@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { ZestLogo } from './components/ZestLogo';
 import { BettingModal } from './components/modals/BettingModal';
+import { DepositModal } from './components/modals/DepositModal';
+import { WithdrawalModal } from './components/modals/WithdrawalModal';
 import { HomePage } from './HomePage';
 import { MarketDetailPage } from './MarketDetailPage';
 import { LoginScreen } from './views/LoginView';
@@ -25,8 +27,10 @@ export const AppContainer: React.FC = () => {
         marketId: string;
         outcome: 'YES' | 'NO';
     } | null>(null);
+    const [showDepositModal, setShowDepositModal] = useState(false);
+    const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
-    const { user, login } = useAuth();
+    const { user, login, isLoading } = useAuth();
     const { setSelectedMarket, markets } = useMarkets();
     const { theme, setTheme } = useTheme();
 
@@ -61,13 +65,22 @@ export const AppContainer: React.FC = () => {
             {user && (
                 <Header
                     onViewChange={setView}
-                    onDepositClick={() => console.log('Deposit clicked')}
+                    onDepositClick={() => setShowDepositModal(true)}
+                    onWithdrawClick={() => setShowWithdrawalModal(true)}
                 />
             )}
 
             <main className={user ? "pt-36" : ""}>
-                {/* Se não estiver logado, forçar tela de LOGIN */}
-                {!user ? (
+                {/* Loading durante autenticação */}
+                {isLoading ? (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center">
+                            <ZestLogo />
+                            <p className="mt-4 text-zinc-400 animate-pulse">Carregando...</p>
+                        </div>
+                    </div>
+                ) : !user ? (
+                    /* Se não estiver logado E não estiver carregando, mostrar tela de LOGIN */
                     <LoginScreen />
                 ) : (
                     <>
@@ -157,6 +170,30 @@ export const AppContainer: React.FC = () => {
                     market={markets.find(m => m.id === bettingModalId.marketId)!}
                     outcome={bettingModalId.outcome}
                     onClose={() => setBettingModalId(null)}
+                    theme={theme}
+                />
+            )}
+
+            {/* Deposit Modal */}
+            {showDepositModal && (
+                <DepositModal
+                    onClose={() => setShowDepositModal(false)}
+                    onSuccess={() => {
+                        setShowDepositModal(false);
+                        // TODO: Atualizar saldo no AuthContext
+                    }}
+                    theme={theme}
+                />
+            )}
+
+            {/* Withdrawal Modal */}
+            {showWithdrawalModal && (
+                <WithdrawalModal
+                    onClose={() => setShowWithdrawalModal(false)}
+                    onSuccess={() => {
+                        setShowWithdrawalModal(false);
+                        // TODO: Atualizar saldo no AuthContext
+                    }}
                     theme={theme}
                 />
             )}

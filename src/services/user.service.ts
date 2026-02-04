@@ -17,12 +17,18 @@ interface SyncUserResponse {
 export class UserService {
     private static readonly BASE_URL = config.apiUrl;
 
-    static async syncUser(payload: SyncUserPayload): Promise<SyncUserResponse> {
+    static async syncUser(payload: SyncUserPayload, token?: string): Promise<SyncUserResponse> {
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const response = await fetch(`${this.BASE_URL}/users/sync`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers,
             body: JSON.stringify(payload),
         });
 
