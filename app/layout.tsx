@@ -7,9 +7,6 @@ import { Providers } from "@/src/Providers";
 export const metadata: Metadata = {
   title: "ZEST Markets - Sua dose diária de mercados reais",
   description: "Plataforma de mercados de previsão brasileira",
-  icons: {
-    icon: "/favicon.ico",
-  },
 };
 
 export default function RootLayout({

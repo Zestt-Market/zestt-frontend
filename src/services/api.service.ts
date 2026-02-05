@@ -30,4 +30,28 @@ export class ApiService {
             return null;
         }
     }
+
+    static async getKalshiMarkets(params?: { limit?: number; status?: string; series_ticker?: string }) {
+        try {
+            const queryParams = new URLSearchParams();
+            if (params?.limit) queryParams.append('limit', params.limit.toString());
+            if (params?.status) queryParams.append('status', params.status);
+            if (params?.series_ticker) queryParams.append('series_ticker', params.series_ticker);
+
+            const url = `${this.baseUrl}/kalshi/markets${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Kalshi API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ Kalshi Markets:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ Kalshi Markets Error:', error);
+            return null;
+        }
+    }
 }
+

@@ -9,6 +9,7 @@ export interface NewsItem {
 export interface Market {
   id: string;
   question: string;
+  subtitle?: string; // Subtítulo contextual (ex: "More than $80", "Team A wins", etc)
   category:
   | "Política"
   | "Economia"

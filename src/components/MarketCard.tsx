@@ -75,15 +75,25 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                         className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
                     />
                 </div>
-                <h3
-                    onClick={onDetailClick}
-                    className={`text-sm font-bold leading-snug line-clamp-2 transition-all cursor-pointer ${theme === "dark"
-                        ? "text-zinc-100 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent group-hover:to-white"
-                        : "text-zinc-900"
-                        }`}
-                >
-                    {market.question}
-                </h3>
+                <div className="flex-1">
+                    <h3
+                        onClick={onDetailClick}
+                        className={`text-sm font-bold leading-snug line-clamp-2 transition-all cursor-pointer ${theme === "dark"
+                            ? "text-zinc-100 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent group-hover:to-white"
+                            : "text-zinc-900"
+                            }`}
+                    >
+                        {market.question}
+                    </h3>
+                    {market.subtitle && (
+                        <p className={`text-xs mt-1 font-medium ${theme === "dark"
+                            ? "text-emerald-400"
+                            : "text-emerald-600"
+                            }`}>
+                            {market.subtitle}
+                        </p>
+                    )}
+                </div>
             </div>
 
             {/* Outcomes Rows */}
