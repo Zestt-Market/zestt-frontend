@@ -76,4 +76,4 @@ export const formatDate = (dateString: string) => {
 
 export const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString("pt-BR");
-};
+};export * from './bet-math';
