@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { useUser, useAuth as useClerkAuth } from '@clerk/nextjs';
 import { User, Position, Trade, Market } from '../types';
 import { UserService } from '@/src/services/user.service';
+import { config } from '@/src/config';
 
 interface AuthContextType {
     user: User | null;
@@ -33,42 +34,60 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [user, setUser] = useState<User | null>(null);
 
     useEffect(() => {
-        if (isLoaded && clerkUser) {
-            const email = clerkUser.primaryEmailAddress?.emailAddress || '';
-            const name = clerkUser.fullName || clerkUser.firstName || email.split('@')[0];
+        const syncAndSetUser = async () => {
+            if (isLoaded && clerkUser) {
+                const email = clerkUser.primaryEmailAddress?.emailAddress || '';
+                const name = clerkUser.fullName || clerkUser.firstName || email.split('@')[0];
 
-            const syncUserWithBackend = async () => {
                 try {
                     const token = await getToken();
-                    await UserService.syncUser({
+
+                    // Sincronizar com backend
+                    const syncedUser = await UserService.syncUser({
                         clerkUserId: clerkUser.id,
                         email,
                         displayName: name,
                         avatarUrl: clerkUser.imageUrl,
                     }, token || undefined);
 
+                    // Buscar saldo
+                    let userBalance = 0;
+                    try {
+                        const balanceResponse = await fetch(`${config.apiUrl}/api/payments/balance?currency=BRL`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                            },
+                        });
+                        if (balanceResponse.ok) {
+                            const balanceData = await balanceResponse.json();
+                            userBalance = balanceData.balanceCents / 100;
+                        }
+                    } catch (balanceError) {
+                        console.error('Failed to fetch balance:', balanceError);
+                    }
+
+                    // Setar usuário com TODOS os dados corretos de uma vez
+                    setUser({
+                        id: syncedUser.id,
+                        name,
+                        email,
+                        avatarUrl: clerkUser.imageUrl,
+                        isAdmin: false,
+                        balance: userBalance,
+                        portfolioValue: 1200.0,
+                        positions: [],
+                        tradeHistory: [],
+                    });
+
                 } catch (err) {
                     console.error('❌ Backend sync error:', err);
                 }
-            };
+            } else if (isLoaded && !clerkUser) {
+                setUser(null);
+            }
+        };
 
-            syncUserWithBackend();
-
-            setUser({
-                id: clerkUser.id,
-                name,
-                email,
-                avatarUrl: clerkUser.imageUrl,
-                isAdmin: false,
-                balance: 3500.0,
-                portfolioValue: 1200.0,
-                positions: [],
-                tradeHistory: [],
-            });
-        } else if (isLoaded && !clerkUser) {
-            // Limpar user se Clerk confirmar que não está autenticado
-            setUser(null);
-        }
+        syncAndSetUser();
     }, [clerkUser, isLoaded, getToken]);
 
     // Log quando user state mudar

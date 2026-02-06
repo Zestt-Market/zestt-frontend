@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Market } from '../../types';
 import { useAuth } from '../../contexts';
+import { useAuth as useClerkAuth } from '@clerk/nextjs';
 import { DepositModal } from './DepositModal';
 import { BetConfirmationModal } from './BetConfirmationModal';
 
@@ -19,14 +20,15 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
     const [amount, setAmount] = useState('');
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-    const { user, handleSimulatedPayment } = useAuth();
+    const { user, setUser } = useAuth();
+    const { getToken } = useClerkAuth();
 
     const price = outcome === 'YES' ? market.yesPrice : market.noPrice;
     const numAmount = parseFloat(amount) || 0;
     const potentialReturn = side === 'BUY' ? (numAmount / price) : (numAmount / (1 - price));
     const profit = potentialReturn - numAmount;
 
-    const handleBuy = () => {
+    const handleBuy = async () => {
         if (!user) {
             alert('Você precisa estar logado para apostar!');
             return;
@@ -42,16 +44,37 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
             return;
         }
 
-        handleSimulatedPayment({
-            market,
-            side: outcome,
-            amount: numAmount,
-            price,
-            date: new Date().toLocaleString('pt-BR'),
-            id: `bet-${Date.now()}`,
-        });
+        try {
+            const { BetService } = await import('../../services/bet.service');
 
-        setShowConfirmationModal(true);
+            const token = await getToken();
+
+            const bet = await BetService.createBet({
+                userId: user.id,
+                marketTicker: market.id,
+                marketTitle: market.question,
+                marketImage: market.image,
+                outcome: outcome,
+                side: side,
+                amountCents: Math.round(numAmount * 100), // Converter para centavos
+                priceCents: Math.round(price * 100), // Converter para centavos
+                potentialReturnCents: Math.round(potentialReturn * 100), // Converter para centavos
+            }, token || undefined);
+
+            setUser((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    balance: prev.balance - numAmount,
+                };
+            });
+
+            setShowConfirmationModal(true);
+        } catch (error) {
+            console.error('Erro ao criar aposta:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Erro ao processar aposta';
+            alert(errorMessage);
+        }
     };
 
     return (
