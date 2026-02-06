@@ -12,9 +12,11 @@ import {
 } from 'lucide-react';
 import { ZestLogo } from './ZestLogo';
 import { useAuth } from '../contexts';
+import { useMarkets } from '../contexts/MarketContext';
 import { useTheme } from '../design-system';
 import { ViewState } from '../types';
 import { usePayments } from '../contexts/PaymentsContext';
+import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
     onViewChange: (view: ViewState) => void;
@@ -35,7 +37,9 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
     const { user, login, logout } = useAuth();
     const { theme, setTheme } = useTheme();
+    const { setCategoryFilter } = useMarkets();
     const { balance, getBalance } = usePayments();
+    const router = useRouter();
     const [displayBalance, setDisplayBalance] = React.useState({ portfolio: 0, cash: 0 });
 
     React.useEffect(() => {
@@ -307,7 +311,10 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="container mx-auto px-6">
                     <nav className="flex items-center justify-center gap-8 py-3.5 overflow-x-auto no-scrollbar whitespace-nowrap text-[11px] font-black uppercase tracking-[0.1em] text-zinc-500">
                         <button
-                            onClick={() => onViewChange(ViewState.MARKETS)}
+                            onClick={() => {
+                                setCategoryFilter(null);
+                                onViewChange(ViewState.HOME);
+                            }}
                             className="flex items-center gap-2 text-white hover:text-primary transition-colors group"
                         >
                             <TrendingUp
@@ -328,26 +335,33 @@ export const Header: React.FC<HeaderProps> = ({
                         ))}
                         <div className="w-px h-3 bg-zinc-800 mx-2"></div>
                         {[
-                            "Política",
-                            "Esportes",
-                            "Crypto",
-                            "Finanças",
-                            "Geopolítica",
-                            "Resultados",
-                            "Tech",
-                            "Cultura",
-                            "Mundo",
-                            "Economia",
-                            "Trump",
-                            "Eleições",
-                            "Menções",
+                            { label: "Política", view: ViewState.MARKETS },
+                            { label: "Esportes", view: ViewState.MARKETS },
+                            { label: "Crypto", view: ViewState.MARKETS },
+                            { label: "Finanças", view: ViewState.MARKETS },
+                            { label: "Geopolítica", view: ViewState.MARKETS },
+                            { label: "Resultados", view: ViewState.MARKETS },
+                            { label: "Tech", view: ViewState.MARKETS },
+                            { label: "Cultura", view: ViewState.MARKETS },
+                            { label: "Mundo", view: ViewState.MARKETS },
+                            { label: "Economia", view: ViewState.MARKETS },
+                            { label: "Trump", view: ViewState.MARKETS },
+                            { label: "Eleições", view: ViewState.MARKETS },
+                            { label: "Menções", view: ViewState.MARKETS },
                         ].map((item) => (
                             <button
-                                key={item}
-                                onClick={() => onViewChange(ViewState.MARKETS)}
+                                key={item.label}
+                                onClick={() => {
+                                    if (item.label === 'Esportes') {
+                                        router.push('/sports');
+                                    } else {
+                                        setCategoryFilter(null);
+                                        onViewChange(item.view);
+                                    }
+                                }}
                                 className="hover:text-white hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] transition-all"
                             >
-                                {item}
+                                {item.label}
                             </button>
                         ))}
                         <button

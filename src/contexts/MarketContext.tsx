@@ -1,13 +1,17 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { Market } from '../types';
 import { KalshiService, KalshiMarket } from '../services/kalshi.service';
+import { worldCupMockMarkets } from '../data/worldCupMockData';
 
 interface MarketContextType {
     markets: Market[];
+    filteredMarkets: Market[];
     selectedMarket: Market | null;
     setSelectedMarket: (market: Market | null) => void;
+    categoryFilter: string | null;
+    setCategoryFilter: (category: string | null) => void;
     isLoading: boolean;
     refreshMarkets: () => Promise<void>;
 }
@@ -95,7 +99,7 @@ const convertKalshiMarket = (kalshiMarket: KalshiMarket): Market => {
         noLabel: labels.no,
         priceHistory: Array.from({ length: 24 }, (_, i) => ({
             time: `${i}:00`,
-            value: yesPrice + (Math.random() - 0.5) * 0.05, 
+            value: yesPrice + (Math.random() - 0.5) * 0.05,
         })),
         news: [],
     };
@@ -109,7 +113,7 @@ const fetchKalshiMarkets = async (): Promise<Market[]> => {
         const eventsResponse = await KalshiService.getEvents({
             limit: 100,
             status: 'open',
-            with_nested_markets: true, 
+            with_nested_markets: true,
         });
 
         if (!eventsResponse || !eventsResponse.events || eventsResponse.events.length === 0) {
@@ -158,6 +162,7 @@ const fetchKalshiMarkets = async (): Promise<Market[]> => {
 export const MarketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [markets, setMarkets] = useState<Market[]>([]);
     const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+    const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const refreshMarkets = async () => {
@@ -173,6 +178,17 @@ export const MarketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setIsLoading(false);
         }
     };
+
+    // Compute filtered markets based on category filter
+    const filteredMarkets = useMemo(() => {
+        // If "Esportes" filter is active, return World Cup mock data
+        if (categoryFilter === 'Esportes') {
+            console.log('🏆 Returning World Cup Mock Markets:', worldCupMockMarkets.length);
+            return worldCupMockMarkets;
+        }
+        // Otherwise return all markets
+        return markets;
+    }, [markets, categoryFilter]);
 
     useEffect(() => {
         let isMounted = true;
@@ -205,8 +221,11 @@ export const MarketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return (
         <MarketContext.Provider value={{
             markets,
+            filteredMarkets,
             selectedMarket,
             setSelectedMarket,
+            categoryFilter,
+            setCategoryFilter,
             isLoading,
             refreshMarkets
         }}>
