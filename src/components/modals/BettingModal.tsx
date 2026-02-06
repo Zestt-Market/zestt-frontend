@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { Market } from '../../types';
 import { useAuth } from '../../contexts';
 import { DepositModal } from './DepositModal';
+import { BetConfirmationModal } from './BetConfirmationModal';
 
 interface BettingModalProps {
     market: Market;
@@ -17,6 +18,7 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
     const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
     const [amount, setAmount] = useState('');
     const [showDepositModal, setShowDepositModal] = useState(false);
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const { user, handleSimulatedPayment } = useAuth();
 
     const price = outcome === 'YES' ? market.yesPrice : market.noPrice;
@@ -36,12 +38,10 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
         }
 
         if (numAmount > user.balance) {
-            // Abre o modal de depósito quando saldo for insuficiente
             setShowDepositModal(true);
             return;
         }
 
-        // Call the actual betting logic from AuthContext
         handleSimulatedPayment({
             market,
             side: outcome,
@@ -51,8 +51,7 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
             id: `bet-${Date.now()}`,
         });
 
-        alert(`✅ Aposta de R$ ${numAmount.toFixed(0)} em ${outcome} confirmada!`);
-        onClose();
+        setShowConfirmationModal(true);
     };
 
     return (
@@ -206,6 +205,21 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
                     onSuccess={() => {
                         setShowDepositModal(false);
                         // Opcionalmente, pode processar a aposta automaticamente após o depósito
+                    }}
+                    theme={theme}
+                />
+            )}
+
+            {/* Modal de Confirmação */}
+            {showConfirmationModal && (
+                <BetConfirmationModal
+                    amount={numAmount}
+                    outcome={outcome}
+                    marketQuestion={market.question}
+                    potentialReturn={potentialReturn}
+                    onClose={() => {
+                        setShowConfirmationModal(false);
+                        onClose();
                     }}
                     theme={theme}
                 />

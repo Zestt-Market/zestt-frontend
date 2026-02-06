@@ -10,6 +10,7 @@ interface MarketContextType {
     filteredMarkets: Market[];
     selectedMarket: Market | null;
     setSelectedMarket: (market: Market | null) => void;
+    setSelectedMarketById: (marketId: string) => void;
     categoryFilter: string | null;
     setCategoryFilter: (category: string | null) => void;
     isLoading: boolean;
@@ -218,12 +219,25 @@ export const MarketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         };
     }, []);
 
+    const setSelectedMarketById = (marketId: string) => {
+        // Search in filteredMarkets first
+        let market = filteredMarkets.find(m => m.id === marketId);
+
+        // If not found and we're not in Esportes filter, also check worldCupMockMarkets
+        if (!market && categoryFilter !== 'Esportes') {
+            market = worldCupMockMarkets.find(m => m.id === marketId);
+        }
+
+        setSelectedMarket(market || null);
+    };
+
     return (
         <MarketContext.Provider value={{
             markets,
             filteredMarkets,
             selectedMarket,
             setSelectedMarket,
+            setSelectedMarketById,
             categoryFilter,
             setCategoryFilter,
             isLoading,

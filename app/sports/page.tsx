@@ -23,11 +23,11 @@ export default function SportsPage() {
     }, [setCategoryFilter]);
 
     const handleMarketClick = (marketId: string) => {
-        router.push(`/market/${marketId}`);
+        router.push(`/markets/${marketId}`);
     };
 
     const handleBetClick = (marketId: string, outcome: 'YES' | 'NO') => {
-        router.push(`/market/${marketId}?bet=${outcome}`);
+        router.push(`/markets/${marketId}?bet=${outcome}`);
     };
 
     const handleViewChange = (newView: ViewState) => {
