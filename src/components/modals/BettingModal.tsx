@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Market } from '../../types';
 import { useAuth } from '../../contexts';
+import { DepositModal } from './DepositModal';
 
 interface BettingModalProps {
     market: Market;
@@ -15,6 +16,7 @@ interface BettingModalProps {
 export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onClose, theme = 'dark' }) => {
     const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
     const [amount, setAmount] = useState('');
+    const [showDepositModal, setShowDepositModal] = useState(false);
     const { user, handleSimulatedPayment } = useAuth();
 
     const price = outcome === 'YES' ? market.yesPrice : market.noPrice;
@@ -34,7 +36,8 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
         }
 
         if (numAmount > user.balance) {
-            alert('Saldo insuficiente!');
+            // Abre o modal de depósito quando saldo for insuficiente
+            setShowDepositModal(true);
             return;
         }
 
@@ -195,6 +198,18 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
                     </button>
                 </div>
             </div>
+
+            {/* Modal de Depósito */}
+            {showDepositModal && (
+                <DepositModal
+                    onClose={() => setShowDepositModal(false)}
+                    onSuccess={() => {
+                        setShowDepositModal(false);
+                        // Opcionalmente, pode processar a aposta automaticamente após o depósito
+                    }}
+                    theme={theme}
+                />
+            )}
         </div>
     );
 };
