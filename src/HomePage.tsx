@@ -13,13 +13,13 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onMarketClick, onBetClick }) => {
-    const { markets, isLoading } = useMarkets();
+    const { filteredMarkets, isLoading, categoryFilter } = useMarkets();
     const { theme } = useTheme();
 
     // Memoize SEMPRE deve estar no mesmo lugar (antes dos returns condicionais)
     const marketList = React.useMemo(() => (
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-20">
-            {markets.map((market, idx) => (
+            {filteredMarkets.map((market, idx) => (
                 <MarketCard
                     key={market.id}
                     market={market}
@@ -30,7 +30,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onMarketClick, onBetClick })
                 />
             ))}
         </section>
-    ), [markets, theme, onMarketClick, onBetClick]);
+    ), [filteredMarkets, theme, onMarketClick, onBetClick]);
 
     if (isLoading) {
         return (
@@ -43,7 +43,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onMarketClick, onBetClick })
         );
     }
 
-    if (markets.length === 0) {
+    if (filteredMarkets.length === 0) {
         return (
             <div className="container mx-auto px-6 pt-4 pb-12">
                 <FiltersBar theme={theme} />
@@ -57,9 +57,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onMarketClick, onBetClick })
     return (
         <div className="container mx-auto px-6 pt-4 pb-12">
             <div className="mb-6">
-                <h2 className="text-xl font-bold text-white mb-1">Mercados em Alta</h2>
+                <h2 className="text-xl font-bold text-white mb-1">
+                    {categoryFilter === 'Esportes' ? 'Copa do Mundo FIFA 2026' : 'Mercados em Alta'}
+                </h2>
                 <p className="text-zinc-400 text-sm">
-                    {markets.length} mercados ativos • Dados em tempo real do Kalshi
+                    {filteredMarkets.length} mercados ativos • {categoryFilter === 'Esportes' ? 'Dados simulados' : 'Dados em tempo real do Kalshi'}
                 </p>
             </div>
             <FiltersBar theme={theme} />
