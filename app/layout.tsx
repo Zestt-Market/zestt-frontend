@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import "./globals.css";
 import { Providers } from "@/src/Providers";
+import { UnifiedHeader } from "@/src/components/UnifiedHeader";
 
 export const metadata: Metadata = {
   title: "ZEST Markets - Sua dose diária de mercados reais",
@@ -22,7 +23,10 @@ export default function RootLayout({
     >
       <html lang="pt-BR" className="dark">
         <body className="antialiased">
-          <Providers>{children}</Providers>
+          <Providers>
+            <UnifiedHeader />
+            {children}
+          </Providers>
         </body>
       </html>
     </ClerkProvider>

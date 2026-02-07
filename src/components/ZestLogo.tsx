@@ -1,7 +1,5 @@
 "use client";
 
-import React from 'react';
-
 export const ZestLogo = () => (
     <div className="flex items-center gap-4 group cursor-pointer select-none">
         <div className="relative w-40 h-auto">

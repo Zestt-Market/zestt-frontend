@@ -1,7 +1,8 @@
-"use client";
+import { getAllMarkets } from '@/src/services/market.service';
+import { MarketsView } from '@/src/components/MarketsView';
 
-import { AppContainer } from "@/src/AppContainer";
+export default async function Home() {
+  const markets = await getAllMarkets();
 
-export default function Home() {
-  return <AppContainer />;
+  return <MarketsView markets={markets} />;
 }
