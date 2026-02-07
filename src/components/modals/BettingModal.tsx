@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts';
 import { useAuth as useClerkAuth } from '@clerk/nextjs';
 import { DepositModal } from './DepositModal';
 import { BetConfirmationModal } from './BetConfirmationModal';
+import { calculateBetReturns, formatCentsToReais, formatPercentage } from '../../utils/bet-math';
 
 interface BettingModalProps {
     market: Market;
@@ -25,8 +26,11 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
 
     const price = outcome === 'YES' ? market.yesPrice : market.noPrice;
     const numAmount = parseFloat(amount) || 0;
-    const potentialReturn = side === 'BUY' ? (numAmount / price) : (numAmount / (1 - price));
-    const profit = potentialReturn - numAmount;
+    const priceDecimal = price > 1.0 ? price / 100 : price;
+    const calculation = numAmount > 0 ? calculateBetReturns(numAmount, priceDecimal) : null;
+    const potentialReturnCents = calculation?.payoutCents || 0;
+    const profitCents = calculation?.profitCents || 0;
+    const profitPercent = calculation?.profitPercent || 0;
 
     const handleBuy = async () => {
         if (!user) {
@@ -56,9 +60,9 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
                 marketImage: market.image,
                 outcome: outcome,
                 side: side,
-                amountCents: Math.round(numAmount * 100), // Converter para centavos
-                priceCents: Math.round(price * 100), // Converter para centavos
-                potentialReturnCents: Math.round(potentialReturn * 100), // Converter para centavos
+                amountCents: calculation?.stakeCents || 0,
+                priceCents: calculation?.priceCents || 0,
+                potentialReturnCents: potentialReturnCents,
             }, token || undefined);
 
             setUser((prev) => {
@@ -196,9 +200,9 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
                                 style={{ minWidth: 0 }}
                             />
                         </div>
-                        {numAmount > 0 && (
+                        {calculation && numAmount > 0 && (
                             <p className="text-xs font-medium text-primary mt-3">
-                                Ganho potencial: R$ {profit.toFixed(0)} ({((profit / numAmount) * 100).toFixed(1)}%)
+                                Ganho potencial: R$ {formatCentsToReais(profitCents)} ({formatPercentage(profitPercent)}%)
                             </p>
                         )}
                     </div>
@@ -234,12 +238,12 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
             )}
 
             {/* Modal de Confirmação */}
-            {showConfirmationModal && (
+            {showConfirmationModal && calculation && (
                 <BetConfirmationModal
                     amount={numAmount}
                     outcome={outcome}
                     marketQuestion={market.question}
-                    potentialReturn={potentialReturn}
+                    potentialReturn={potentialReturnCents / 100}
                     onClose={() => {
                         setShowConfirmationModal(false);
                         onClose();

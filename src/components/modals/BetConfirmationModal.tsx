@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, TrendingUp, X } from 'lucide-react';
+import { formatPercentage } from '../../utils/bet-math';
 
 interface BetConfirmationModalProps {
     amount: number;
@@ -22,7 +23,7 @@ export const BetConfirmationModal: React.FC<BetConfirmationModalProps> = ({
 }) => {
     const [isVisible, setIsVisible] = useState(false);
     const profit = potentialReturn - amount;
-    const profitPercentage = ((profit / amount) * 100).toFixed(1);
+    const profitPercentage = amount > 0 ? (profit / amount) * 100 : 0;
 
     useEffect(() => {
         // Trigger animation after mount
@@ -64,8 +65,8 @@ export const BetConfirmationModal: React.FC<BetConfirmationModalProps> = ({
                     <button
                         onClick={handleClose}
                         className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${theme === 'dark'
-                                ? 'hover:bg-white/10 text-zinc-400'
-                                : 'hover:bg-zinc-100 text-zinc-600'
+                            ? 'hover:bg-white/10 text-zinc-400'
+                            : 'hover:bg-zinc-100 text-zinc-600'
                             }`}
                     >
                         <X size={20} />
@@ -105,15 +106,15 @@ export const BetConfirmationModal: React.FC<BetConfirmationModalProps> = ({
                                 }`}>
                                 VALOR
                             </p>
-                            <p className={`text-xl font-black ${theme === 'dark' ? 'text-white' : 'text-zinc-900'
+                            <p className={`text-xl font-black ${theme === 'dark' ? 'text-white' : 'text-zinc-900'}
                                 }`}>
-                                R$ {amount.toFixed(0)}
+                                R$ {Math.round(amount)}
                             </p>
                         </div>
 
                         <div className={`rounded-2xl p-4 ${outcome === 'YES'
-                                ? 'bg-primary/20 border-2 border-primary'
-                                : 'bg-purple-500/20 border-2 border-purple-500'
+                            ? 'bg-primary/20 border-2 border-primary'
+                            : 'bg-purple-500/20 border-2 border-purple-500'
                             }`}>
                             <p className={`text-xs font-medium mb-1 ${outcome === 'YES' ? 'text-primary' : 'text-purple-400'
                                 }`}>
@@ -128,8 +129,8 @@ export const BetConfirmationModal: React.FC<BetConfirmationModalProps> = ({
 
                     {/* Potential Return */}
                     <div className={`rounded-2xl p-5 border-2 ${theme === 'dark'
-                            ? 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30'
-                            : 'bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20'
+                        ? 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30'
+                        : 'bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20'
                         }`}>
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -139,15 +140,15 @@ export const BetConfirmationModal: React.FC<BetConfirmationModalProps> = ({
                                 </p>
                             </div>
                             <span className="text-xs font-bold text-primary bg-primary/20 px-2 py-1 rounded-full">
-                                +{profitPercentage}%
+                                +{formatPercentage(profitPercentage)}%
                             </span>
                         </div>
                         <p className="text-3xl font-black text-primary">
-                            R$ {profit.toFixed(0)}
+                            R$ {Math.round(profit)}
                         </p>
-                        <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-600'
+                        <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-600'}
                             }`}>
-                            Retorno total: R$ {potentialReturn.toFixed(0)}
+                            Retorno total: R$ {Math.round(potentialReturn)}
                         </p>
                     </div>
 

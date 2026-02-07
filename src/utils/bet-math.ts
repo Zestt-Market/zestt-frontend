@@ -87,7 +87,7 @@ export function calculateBetReturns(
 
   // Número de contratos que pode comprar
   const contracts = stakeCents / priceCents;
-  
+
   // Validação extra: contracts deve ser finito
   if (!isValidNumber(contracts)) {
     return {
@@ -127,19 +127,72 @@ export function calculateBetReturns(
 }
 
 /**
- * Formata centavos para reais (string formatada)
- * @param cents Valor em centavos
- * @returns String formatada em reais (ex: "100" para 10000 centavos)
+ * Converte centavos para reais (número)
+ * Usa divisão inteira para evitar problemas de ponto flutuante
+ * @param cents Valor em centavos (inteiro)
+ * @returns Valor em reais (número)
  */
-export function formatCentsToReais(cents: number): string {
+export function centsToReais(cents: number): number {
   if (!isValidNumber(cents)) {
+    return 0;
+  }
+  // Divisão inteira: Math.floor para parte inteira, resto para decimais
+  const reaisInt = Math.floor(cents / 100);
+  const centavosRest = cents % 100;
+  return reaisInt + (centavosRest / 100);
+}
+
+/**
+ * Formata centavos para string em reais (estilo brasileiro)
+ * Evita toFixed() usando aritmética de inteiros
+ * @param cents Valor em centavos (inteiro)
+ * @param showDecimals Se true, mostra centavos (padrão: false)
+ * @returns String formatada (ex: "123" ou "123,45")
+ */
+export function formatCentsToReais(cents: number, showDecimals: boolean = false): string {
+  if (!isValidNumber(cents)) {
+    return showDecimals ? '0,00' : '0';
+  }
+
+  // Aritmética de inteiros para evitar problemas de ponto flutuante
+  const reaisInt = Math.floor(Math.abs(cents) / 100);
+  const centavosRest = Math.abs(cents) % 100;
+  const signal = cents < 0 ? '-' : '';
+
+  if (showDecimals) {
+    // Formata centavos com zero à esquerda se necessário
+    const centavosStr = centavosRest < 10 ? `0${centavosRest}` : `${centavosRest}`;
+    return `${signal}${reaisInt},${centavosStr}`;
+  }
+
+  return `${signal}${reaisInt}`;
+}
+
+/**
+ * Formata percentual de forma robusta
+ * @param percent Percentual (ex: 53.846153846)
+ * @param decimals Casas decimais (padrão: 1)
+ * @returns String formatada (ex: "53,8")
+ */
+export function formatPercentage(percent: number, decimals: number = 1): string {
+  if (!isValidNumber(percent)) {
     return '0';
   }
-  const reais = cents / 100;
-  if (!isValidNumber(reais)) {
-    return '0';
+
+  // Multiplica por 10^decimals, arredonda, depois divide
+  const multiplier = Math.pow(10, decimals);
+  const rounded = Math.round(Math.abs(percent) * multiplier);
+  const signal = percent < 0 ? '-' : '';
+
+  if (decimals === 0) {
+    return `${signal}${rounded}`;
   }
-  return reais.toFixed(0);
+
+  const intPart = Math.floor(rounded / multiplier);
+  const decPart = rounded % multiplier;
+  const decStr = decPart.toString().padStart(decimals, '0');
+
+  return `${signal}${intPart},${decStr}`;
 }
 
 /**
@@ -164,24 +217,25 @@ export function safeParseFloat(value: string | number): number {
   if (typeof value === 'number') {
     return isValidNumber(value) ? value : 0;
   }
-  
+
   if (typeof value !== 'string' || value.trim() === '') {
     return 0;
   }
-  
+
   const parsed = parseFloat(value.replace(',', '.'));
   return isValidNumber(parsed) ? parsed : 0;
 }
 
 /**
- * Formata número para exibição com validação
- * @param value Número para formatar
- * @param decimals Casas decimais (padrão: 2)
- * @returns String formatada ou "0.00"
+ * Converte reais (string ou número) para centavos (inteiro)
+ * @param reais Valor em reais
+ * @returns Valor em centavos (inteiro)
  */
-export function formatNumber(value: number, decimals: number = 2): string {
+export function reaisToCents(reais: string | number): number {
+  const value = typeof reais === 'string' ? safeParseFloat(reais) : reais;
   if (!isValidNumber(value)) {
-    return '0' + (decimals > 0 ? '.' + '0'.repeat(decimals) : '');
+    return 0;
   }
-  return value.toFixed(decimals);
+  // Arredonda para evitar problemas de ponto flutuante
+  return safeRound(value * 100);
 }

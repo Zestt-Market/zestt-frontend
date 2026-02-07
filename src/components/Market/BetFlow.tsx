@@ -3,7 +3,7 @@
 import React from 'react';
 import type { Outcome } from '../../hooks/useBetFlow';
 import { OutcomeButton } from './OutcomeButton';
-import { calculateBetReturns, formatCentsToReais, safeParseFloat, formatNumber } from '../../utils/bet-math';
+import { calculateBetReturns, formatCentsToReais, safeParseFloat, formatPercentage } from '../../utils/bet-math';
 
 interface BetFlowProps {
   expandedOutcome: Outcome;
@@ -46,13 +46,13 @@ export const BetFlow: React.FC<BetFlowProps> = ({
   // Handler robusto para input
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
-    
+
     // Permite campo vazio
     if (rawValue === '') {
       onSetAmount(0);
       return;
     }
-    
+
     // Parse seguro
     const parsed = safeParseFloat(rawValue);
     onSetAmount(parsed);
@@ -67,9 +67,8 @@ export const BetFlow: React.FC<BetFlowProps> = ({
         aria-label="Voltar para seleção de mercado"
       >
         <span
-          className={`text-xs font-semibold ${
-            theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'
-          }`}
+          className={`text-xs font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'
+            }`}
         >
           {currentLabel}
         </span>
@@ -130,23 +129,20 @@ export const BetFlow: React.FC<BetFlowProps> = ({
 
           {/* Input de valor */}
           <div
-            className={`rounded-xl p-4 ${
-              theme === 'dark' ? 'bg-zinc-800/50' : 'bg-zinc-50'
-            }`}
+            className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-zinc-50'
+              }`}
           >
             <label
               htmlFor="bet-amount"
-              className={`text-xs font-medium mb-2 block ${
-                theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'
-              }`}
+              className={`text-xs font-medium mb-2 block ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'
+                }`}
             >
               Reais
             </label>
             <div className="flex items-center gap-2">
               <span
-                className={`text-2xl font-bold ${
-                  theme === 'dark' ? 'text-zinc-600' : 'text-zinc-400'
-                }`}
+                className={`text-2xl font-bold ${theme === 'dark' ? 'text-zinc-600' : 'text-zinc-400'
+                  }`}
               >
                 R$
               </span>
@@ -158,11 +154,10 @@ export const BetFlow: React.FC<BetFlowProps> = ({
                 value={amountReais > 0 ? amountReais : ''}
                 onChange={handleAmountChange}
                 placeholder="0"
-                className={`flex-1 text-2xl font-bold bg-transparent outline-none ${
-                  theme === 'dark'
-                    ? 'text-white placeholder-zinc-700'
-                    : 'text-zinc-900 placeholder-zinc-300'
-                }`}
+                className={`flex-1 text-2xl font-bold bg-transparent outline-none ${theme === 'dark'
+                  ? 'text-white placeholder-zinc-700'
+                  : 'text-zinc-900 placeholder-zinc-300'
+                  }`}
                 aria-label="Valor da aposta em reais"
               />
             </div>
@@ -175,7 +170,7 @@ export const BetFlow: React.FC<BetFlowProps> = ({
               <div className="text-lg font-bold text-primary">
                 R$ {formatCentsToReais(calculation.profitCents)}{' '}
                 <span className="text-sm">
-                  ({formatNumber(calculation.profitPercent, 1)}%)
+                  ({formatPercentage(calculation.profitPercent)}%)
                 </span>
               </div>
             </div>
@@ -185,15 +180,14 @@ export const BetFlow: React.FC<BetFlowProps> = ({
           <button
             onClick={onConfirm}
             disabled={amountReais <= 0}
-            className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
-              amountReais > 0
-                ? selectedOutcome === 'YES'
-                  ? 'bg-primary hover:bg-lime-400 text-black shadow-lg shadow-primary/30'
-                  : 'bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/30'
-                : theme === 'dark'
-                  ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-                  : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
-            }`}
+            className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${amountReais > 0
+              ? selectedOutcome === 'YES'
+                ? 'bg-primary hover:bg-lime-400 text-black shadow-lg shadow-primary/30'
+                : 'bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+              : theme === 'dark'
+                ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+                : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+              }`}
             aria-label={`Confirmar aposta de R$ ${amountReais}`}
           >
             Comprar
