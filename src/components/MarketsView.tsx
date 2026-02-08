@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FiltersBar } from './FiltersBar';
 import MarketCard from './MarketCard';
 import { useTheme } from '@/src/design-system';
 import { Market } from '@/src/types';
 import { useRouter } from 'next/navigation';
+import { BettingModal } from './modals/BettingModal';
 
 interface MarketsViewProps {
     markets: Market[];
@@ -14,14 +15,21 @@ interface MarketsViewProps {
 export const MarketsView: React.FC<MarketsViewProps> = ({ markets }) => {
     const { theme } = useTheme();
     const router = useRouter();
+    const [showBettingModal, setShowBettingModal] = useState(false);
+    const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+    const [betOutcome, setBetOutcome] = useState<'YES' | 'NO'>('YES');
 
     const handleMarketClick = (marketId: string) => {
         router.push(`/markets/${marketId}`);
     };
 
     const handleBetClick = (marketId: string, outcome: 'YES' | 'NO') => {
-        // TODO: Open betting modal
-        console.log('Bet click:', marketId, outcome);
+        const market = markets.find(m => m.id === marketId);
+        if (market) {
+            setSelectedMarket(market);
+            setBetOutcome(outcome);
+            setShowBettingModal(true);
+        }
     };
 
     if (markets.length === 0) {
@@ -60,6 +68,15 @@ export const MarketsView: React.FC<MarketsViewProps> = ({ markets }) => {
                     />
                 ))}
             </section>
+
+            {showBettingModal && selectedMarket && (
+                <BettingModal
+                    market={selectedMarket}
+                    outcome={betOutcome}
+                    onClose={() => setShowBettingModal(false)}
+                    theme={theme}
+                />
+            )}
         </div>
     );
 };

@@ -29,17 +29,15 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const handleConfirmBet = () => {
     if (betFlow.state.selectedOutcome && betFlow.state.amountReais > 0) {
       onBetClick(betFlow.state.selectedOutcome);
-      betFlow.reset();
     }
   };
 
   return (
     <div
-      className={`animate-enter group relative flex flex-col border rounded-xl overflow-hidden transition-all p-4 ${
-        theme === 'dark'
-          ? 'bg-zinc-900 border-zinc-800'
-          : 'bg-white border-zinc-200 shadow-sm'
-      }`}
+      className={`animate-enter group relative flex flex-col border rounded-xl overflow-hidden transition-all p-4 ${theme === 'dark'
+        ? 'bg-zinc-900 border-zinc-800'
+        : 'bg-white border-zinc-200 shadow-sm'
+        }`}
       style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'both' }}
     >
       <MarketCardHeader

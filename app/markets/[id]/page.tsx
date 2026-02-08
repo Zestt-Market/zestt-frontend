@@ -1,11 +1,9 @@
 "use client";
 
 import { MarketDetailPage } from '@/src/MarketDetailPage';
-import { Header } from '@/src/components/Header';
 import { useMarkets } from '@/src/contexts/MarketContext';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ViewState } from '@/src/types';
 import { BettingModal } from '@/src/components/modals/BettingModal';
 
 export default function MarketPage() {
@@ -42,27 +40,8 @@ export default function MarketPage() {
         setShowBettingModal(true);
     };
 
-    const handleViewChange = (newView: ViewState) => {
-        if (newView !== ViewState.MARKETS) {
-            router.push('/');
-        }
-    };
-
-    const handleDepositClick = () => {
-        console.log('Deposit clicked');
-    };
-
-    const handleWithdrawClick = () => {
-        console.log('Withdraw clicked');
-    };
-
     return (
         <>
-            <Header
-                onViewChange={handleViewChange}
-                onDepositClick={handleDepositClick}
-                onWithdrawClick={handleWithdrawClick}
-            />
             <MarketDetailPage onBack={handleBack} onBetClick={handleBetClick} />
 
             {showBettingModal && selectedMarket && (

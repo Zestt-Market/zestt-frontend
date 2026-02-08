@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FiltersBar } from './FiltersBar';
 import MarketCard from './MarketCard';
 import { useTheme } from '@/src/design-system';
 import { Market } from '@/src/types';
 import { Category } from '@/src/constants/categories';
 import { useRouter } from 'next/navigation';
+import { BettingModal } from './modals/BettingModal';
 
 interface CategoryMarketsViewProps {
     category: Category;
@@ -16,14 +17,21 @@ interface CategoryMarketsViewProps {
 export const CategoryMarketsView: React.FC<CategoryMarketsViewProps> = ({ category, markets }) => {
     const { theme } = useTheme();
     const router = useRouter();
+    const [showBettingModal, setShowBettingModal] = useState(false);
+    const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+    const [betOutcome, setBetOutcome] = useState<'YES' | 'NO'>('YES');
 
     const handleMarketClick = (marketId: string) => {
         router.push(`/markets/${marketId}`);
     };
 
     const handleBetClick = (marketId: string, outcome: 'YES' | 'NO') => {
-        // TODO: Open betting modal
-        console.log('Bet click:', marketId, outcome);
+        const market = markets.find(m => m.id === marketId);
+        if (market) {
+            setSelectedMarket(market);
+            setBetOutcome(outcome);
+            setShowBettingModal(true);
+        }
     };
 
     if (markets.length === 0) {
@@ -67,6 +75,15 @@ export const CategoryMarketsView: React.FC<CategoryMarketsViewProps> = ({ catego
                     />
                 ))}
             </section>
+
+            {showBettingModal && selectedMarket && (
+                <BettingModal
+                    market={selectedMarket}
+                    outcome={betOutcome}
+                    onClose={() => setShowBettingModal(false)}
+                    theme={theme}
+                />
+            )}
         </div>
     );
 };

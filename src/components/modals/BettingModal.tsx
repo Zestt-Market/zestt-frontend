@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { Market } from '../../types';
 import { useAuth } from '../../contexts';
 import { useAuth as useClerkAuth } from '@clerk/nextjs';
+import { usePayments } from '../../contexts/PaymentsContext';
 import { DepositModal } from './DepositModal';
 import { BetConfirmationModal } from './BetConfirmationModal';
 import { calculateBetReturns, formatCentsToReais, formatPercentage } from '../../utils/bet-math';
@@ -23,10 +24,13 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const { user, setUser } = useAuth();
     const { getToken } = useClerkAuth();
+    const { getBalance } = usePayments();
 
     const price = outcome === 'YES' ? market.yesPrice : market.noPrice;
     const numAmount = parseFloat(amount) || 0;
-    const priceDecimal = price > 1.0 ? price / 100 : price;
+
+    const priceDecimal = price;
+
     const calculation = numAmount > 0 ? calculateBetReturns(numAmount, priceDecimal) : null;
     const potentialReturnCents = calculation?.payoutCents || 0;
     const profitCents = calculation?.profitCents || 0;
@@ -53,17 +57,28 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
 
             const token = await getToken();
 
-            const bet = await BetService.createBet({
+            const isValidUrl = (url: string) => {
+                try {
+                    new URL(url);
+                    return true;
+                } catch {
+                    return false;
+                }
+            };
+
+            const payload = {
                 userId: user.id,
                 marketTicker: market.id,
                 marketTitle: market.question,
-                marketImage: market.image,
+                ...(market.image && isValidUrl(market.image) ? { marketImage: market.image } : {}),
                 outcome: outcome,
                 side: side,
                 amountCents: calculation?.stakeCents || 0,
                 priceCents: calculation?.priceCents || 0,
                 potentialReturnCents: potentialReturnCents,
-            }, token || undefined);
+            };
+
+            await BetService.createBet(payload, token || undefined);
 
             setUser((prev) => {
                 if (!prev) return prev;
@@ -72,6 +87,8 @@ export const BettingModal: React.FC<BettingModalProps> = ({ market, outcome, onC
                     balance: prev.balance - numAmount,
                 };
             });
+
+            await getBalance('BRL');
 
             setShowConfirmationModal(true);
         } catch (error) {
