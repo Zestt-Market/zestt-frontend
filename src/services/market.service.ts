@@ -87,8 +87,7 @@ export async function getTrendingMarkets(): Promise<Market[]> {
         console.log('[Market Service] Fetching trending markets from:', `${API_URL}/v1/markets/trending`);
 
         const response = await fetch(`${API_URL}/v1/markets/trending`, {
-            next: { revalidate: 60 }, // Cache for 60 seconds
-            cache: 'no-store' // Force fresh data in production
+            next: { revalidate: 60 }, // ISR: Cache for 60 seconds
         });
 
         if (!response.ok) {
@@ -128,9 +127,9 @@ export async function getMarketsByCategory(slug: string): Promise<Market[]> {
 
     try {
         console.log('[Market Service] Fetching category markets:', slug, 'tag:', category.domeTag);
-        
+
         const response = await fetch(`${API_URL}/v1/categories/${category.domeTag}/events`, {
-            cache: 'no-store'
+            next: { revalidate: 60 }, // ISR: Cache for 60 seconds
         });
 
         if (!response.ok) {
@@ -190,7 +189,9 @@ export async function getMarketById(id: string, platform: 'polymarket' | 'kalshi
             ? `/v1/kalshi/market/${id}`
             : `/v1/polymarket/market/${id}`;
 
-        const response = await fetch(`${API_URL}${endpoint}`);
+        const response = await fetch(`${API_URL}${endpoint}`, {
+            next: { revalidate: 60 }, // ISR: Cache for 60 seconds
+        });
 
         if (!response.ok) return null;
 
