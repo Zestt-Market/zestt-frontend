@@ -84,18 +84,22 @@ const mapDomeMarketToMarket = (domeMarket: DomeMarket): Market => {
  */
 export async function getTrendingMarkets(): Promise<Market[]> {
     try {
+        console.log('[Market Service] Fetching trending markets from:', `${API_URL}/v1/markets/trending`);
+
         const response = await fetch(`${API_URL}/v1/markets/trending`, {
-            next: { revalidate: 60 } // Cache for 60 seconds
+            next: { revalidate: 60 }, // Cache for 60 seconds
+            cache: 'no-store' // Force fresh data in production
         });
 
         if (!response.ok) {
-            console.error('Failed to fetch trending markets:', response.status);
+            console.error('[Market Service] Failed to fetch trending markets:', response.status, response.statusText);
             return [];
         }
 
         const data = await response.json();
 
         if (!data.markets || !Array.isArray(data.markets)) {
+            console.warn('[Market Service] Invalid data structure received');
             return [];
         }
 
@@ -117,12 +121,20 @@ export async function getMarketsByCategory(slug: string): Promise<Market[]> {
     }
 
     const category = getCategoryBySlug(slug);
-    if (!category || !category.domeTag) return [];
+    if (!category || !category.domeTag) {
+        console.warn('[Market Service] Invalid category slug:', slug);
+        return [];
+    }
 
     try {
-        const response = await fetch(`${API_URL}/v1/categories/${category.domeTag}/events`);
+        console.log('[Market Service] Fetching category markets:', slug, 'tag:', category.domeTag);
+        
+        const response = await fetch(`${API_URL}/v1/categories/${category.domeTag}/events`, {
+            cache: 'no-store'
+        });
 
         if (!response.ok) {
+            console.error('[Market Service] Failed to fetch category markets:', response.status, response.statusText);
             return [];
         }
 

@@ -9,6 +9,9 @@ interface CategoryPageProps {
     };
 }
 
+// Enable ISR
+export const revalidate = 60;
+
 export async function generateStaticParams() {
     const slugs = getAllCategorySlugs();
     return slugs.map((slug) => ({
