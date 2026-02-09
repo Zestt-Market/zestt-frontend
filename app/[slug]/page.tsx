@@ -21,13 +21,21 @@ export async function generateStaticParams() {
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
     const { slug } = await params;
+
+    console.log('[CategoryPage] Rendering category:', slug);
+    console.log('[CategoryPage] API URL:', process.env.NEXT_PUBLIC_API_URL);
+
     const category = getCategoryBySlug(slug);
 
     if (!category) {
+        console.warn('[CategoryPage] Category not found:', slug);
         notFound();
     }
 
+    console.log('[CategoryPage] Fetching markets for category:', category.label);
     const markets = await getMarketsByCategory(slug);
+
+    console.log('[CategoryPage] Markets fetched:', markets.length);
 
     return <CategoryMarketsView category={category} markets={markets} />;
 }
