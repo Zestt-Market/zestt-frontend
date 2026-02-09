@@ -46,6 +46,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         subtitle={market.subtitle}
         onDetailClick={onDetailClick}
         theme={theme}
+        platform={market.platform}
       />
 
       {betFlow.state.step === 'collapsed' ? (

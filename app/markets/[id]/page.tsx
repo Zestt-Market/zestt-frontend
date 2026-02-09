@@ -18,13 +18,10 @@ export default function MarketPage() {
     const betParam = searchParams.get('bet') as 'YES' | 'NO' | null;
 
     useEffect(() => {
-        if (marketId) {
-            setSelectedMarketById(marketId);
-        }
+        if (marketId) setSelectedMarketById(marketId);
     }, [marketId, setSelectedMarketById]);
 
     useEffect(() => {
-        // If there's a bet parameter in the URL, open the betting modal
         if (betParam && selectedMarket) {
             setBetOutcome(betParam);
             setShowBettingModal(true);

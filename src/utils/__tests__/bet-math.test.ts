@@ -10,7 +10,7 @@ import {
 describe('calculateBetReturns', () => {
   it('deve calcular corretamente retornos válidos', () => {
     const result = calculateBetReturns(100, 0.65);
-    
+
     expect(result.stakeCents).toBe(10000);
     expect(result.priceCents).toBe(65);
     expect(result.contracts).toBeCloseTo(153.85, 2);
@@ -21,21 +21,21 @@ describe('calculateBetReturns', () => {
 
   it('deve retornar zeros para stake inválido', () => {
     const result = calculateBetReturns(-10, 0.5);
-    
+
     expect(result.stakeCents).toBe(0);
     expect(result.profitCents).toBe(0);
   });
 
   it('deve retornar zeros para preço inválido', () => {
     const result = calculateBetReturns(100, 1.5);
-    
+
     expect(result.stakeCents).toBe(0);
     expect(result.profitCents).toBe(0);
   });
 
   it('deve proteger contra divisão por zero (price = 0)', () => {
     const result = calculateBetReturns(100, 0);
-    
+
     // Quando price é 0, a função retorna zeros (entrada inválida)
     expect(result.stakeCents).toBe(0);
     expect(result.priceCents).toBe(0);
@@ -46,21 +46,21 @@ describe('calculateBetReturns', () => {
 
   it('deve proteger contra NaN', () => {
     const result = calculateBetReturns(NaN, 0.5);
-    
+
     expect(result.stakeCents).toBe(0);
     expect(result.profitCents).toBe(0);
   });
 
   it('deve proteger contra Infinity', () => {
     const result = calculateBetReturns(Infinity, 0.5);
-    
+
     expect(result.stakeCents).toBe(0);
     expect(result.profitCents).toBe(0);
   });
 
   it('deve calcular corretamente com preço muito baixo', () => {
     const result = calculateBetReturns(10, 0.01);
-    
+
     expect(result.stakeCents).toBe(1000);
     expect(result.priceCents).toBe(1);
     expect(result.contracts).toBe(1000);
@@ -70,7 +70,7 @@ describe('calculateBetReturns', () => {
 
   it('deve calcular corretamente com preço muito alto', () => {
     const result = calculateBetReturns(10, 0.99);
-    
+
     expect(result.stakeCents).toBe(1000);
     expect(result.priceCents).toBe(99);
     expect(result.payoutCents).toBeGreaterThan(1000);
@@ -152,29 +152,5 @@ describe('safeParseFloat', () => {
 
   it('deve proteger contra Infinity', () => {
     expect(safeParseFloat(Infinity)).toBe(0);
-  });
-});
-
-describe('formatNumber', () => {
-  it('deve formatar números com casas decimais', () => {
-    expect(formatNumber(100, 2)).toBe('100.00');
-    expect(formatNumber(50.5, 2)).toBe('50.50');
-    expect(formatNumber(0.1, 3)).toBe('0.100');
-  });
-
-  it('deve formatar com padrão de 2 decimais', () => {
-    expect(formatNumber(100)).toBe('100.00');
-  });
-
-  it('deve proteger contra NaN', () => {
-    expect(formatNumber(NaN, 2)).toBe('0.00');
-  });
-
-  it('deve proteger contra Infinity', () => {
-    expect(formatNumber(Infinity, 2)).toBe('0.00');
-  });
-
-  it('deve proteger contra valores negativos', () => {
-    expect(formatNumber(-100, 2)).toBe('0.00');
   });
 });

@@ -27,6 +27,11 @@ export interface Market {
   noLabel?: string; // Label customizado para "Não" (ex: "Levante", "No", etc)
   priceHistory: { time: string; value: number }[]; // For chart
   news: NewsItem[]; // Novo campo
+
+  // Dome API fields
+  platform?: 'polymarket' | 'kalshi';
+  sideA?: { id: string; label: string; price: number };
+  sideB?: { id: string; label: string; price: number };
 }
 
 export interface Position {

@@ -10,7 +10,7 @@ interface MarketContextType {
     filteredMarkets: Market[];
     selectedMarket: Market | null;
     setSelectedMarket: (market: Market | null) => void;
-    setSelectedMarketById: (marketId: string) => void;
+    setSelectedMarketById: (marketId: string) => Promise<void>;
     categoryFilter: string | null;
     setCategoryFilter: (category: string | null) => void;
     isLoading: boolean;
@@ -109,25 +109,20 @@ const convertKalshiMarket = (kalshiMarket: KalshiMarket): Market => {
 
 const fetchKalshiMarkets = async (): Promise<Market[]> => {
     try {
-        console.log('🔄 Buscando eventos do Kalshi...');
-
         const eventsResponse = await KalshiService.getEvents({
             limit: 100,
             status: 'open',
             with_nested_markets: true,
         });
 
-        if (!eventsResponse || !eventsResponse.events || eventsResponse.events.length === 0) {
-            console.warn('⚠️ Nenhum evento retornado da API do Kalshi');
+        if (!eventsResponse?.events?.length) {
             return [];
         }
-
-        console.log(`✅ ${eventsResponse.events.length} eventos do Kalshi recebidos`);
 
         const markets: Market[] = [];
 
         for (const event of eventsResponse.events) {
-            if (!event.markets || event.markets.length === 0) continue;
+            if (!event.markets?.length) continue;
 
             const sortedMarkets = [...event.markets].sort((a, b) =>
                 (b.volume_24h || b.volume || 0) - (a.volume_24h || a.volume || 0)
@@ -135,27 +130,19 @@ const fetchKalshiMarkets = async (): Promise<Market[]> => {
 
             const topMarket = sortedMarkets[0];
 
-            if (topMarket.ticker &&
-                topMarket.title &&
+            if (topMarket.ticker && topMarket.title &&
                 (topMarket.yes_ask > 0 || topMarket.no_ask > 0 || topMarket.last_price > 0)) {
-
                 try {
-                    const converted = convertKalshiMarket(topMarket);
-                    markets.push(converted);
+                    markets.push(convertKalshiMarket(topMarket));
                 } catch (error) {
-                    console.error('❌ Erro ao converter market:', error);
+                    console.error('Error converting market:', error);
                 }
             }
         }
 
-        console.log(`✅ ${markets.length} mercados processados`);
-
-        const sortedMarkets = markets.sort((a, b) => b.volume - a.volume);
-
-        return sortedMarkets;
-
+        return markets.sort((a, b) => b.volume - a.volume);
     } catch (error) {
-        console.error('❌ Erro ao buscar mercados do Kalshi:', error);
+        console.error('Error fetching Kalshi markets:', error);
         return [];
     }
 };
@@ -170,24 +157,19 @@ export const MarketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setIsLoading(true);
         try {
             const kalshiMarkets = await fetchKalshiMarkets();
-            console.log(`✅ ${kalshiMarkets.length} mercados do Kalshi carregados`);
             setMarkets(kalshiMarkets);
         } catch (error) {
-            console.error('❌ Erro ao atualizar mercados:', error);
+            console.error('Error refreshing markets:', error);
             setMarkets([]);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Compute filtered markets based on category filter
     const filteredMarkets = useMemo(() => {
-        // If "Esportes" filter is active, return World Cup mock data
         if (categoryFilter === 'Esportes') {
-            console.log('🏆 Returning World Cup Mock Markets:', worldCupMockMarkets.length);
             return worldCupMockMarkets;
         }
-        // Otherwise return all markets
         return markets;
     }, [markets, categoryFilter]);
 
@@ -198,37 +180,37 @@ export const MarketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setIsLoading(true);
             try {
                 const kalshiMarkets = await fetchKalshiMarkets();
-                if (isMounted) {
-                    console.log(`✅ ${kalshiMarkets.length} mercados do Kalshi carregados`);
-                    setMarkets(kalshiMarkets);
-                }
+                if (isMounted) setMarkets(kalshiMarkets);
             } catch (error) {
-                console.error('❌ Erro ao carregar mercados:', error);
-                if (isMounted) {
-                    setMarkets([]);
-                }
+                console.error('Error loading markets:', error);
+                if (isMounted) setMarkets([]);
             } finally {
                 if (isMounted) setIsLoading(false);
             }
         };
 
         loadMarkets();
-
-        return () => {
-            isMounted = false;
-        };
+        return () => { isMounted = false; };
     }, []);
 
-    const setSelectedMarketById = (marketId: string) => {
-        // Search in filteredMarkets first
+    const setSelectedMarketById = async (marketId: string) => {
         let market = filteredMarkets.find(m => m.id === marketId);
 
-        // If not found and we're not in Esportes filter, also check worldCupMockMarkets
         if (!market && categoryFilter !== 'Esportes') {
             market = worldCupMockMarkets.find(m => m.id === marketId);
         }
 
-        setSelectedMarket(market || null);
+        if (!market) {
+            try {
+                const { getMarketByIdClient, detectPlatformFromId } = await import('../services/market-client.service');
+                const platform = detectPlatformFromId(marketId);
+                market = await getMarketByIdClient(marketId, platform);
+            } catch (error) {
+                console.error(`Error fetching market ${marketId}:`, error);
+            }
+        }
+
+        setSelectedMarket(market ?? null);
     };
 
     return (
